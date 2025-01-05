@@ -1,0 +1,100 @@
+# Nome da Action
+name: "Deploy no Site Beta no push"
+
+on:
+  # Evento
+  push:
+    # Branches afetadas (neste caso, apenas a "sitebeta")
+    branches:
+      - sitebeta
+
+  workflow_dispatch:
+    inputs:
+      sync:
+        description: "File synchronization"
+        required: true
+        # delta | full (delta sobe apenas as alterações)
+        default: "delta"
+
+# Tarefas
+jobs:
+  # Id da tarefa
+  deploy-beta:
+    name: "Deploy para o beta"
+
+    # Verifica se a branch atual é a "sitebeta" antes de executar as tarefas
+    if: ${{ github.ref == 'refs/heads/sitebeta' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout
+      - name: "Pega o código mais recente"
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Transferência
+      - name: "SFTP Deploy"
+        uses: milanmk/actions-file-deployer@master
+        with:
+          remote-protocol: "sftp"
+          remote-host: "${{ secrets.FTP_SITEBETA_HOST }}"
+          remote-user: "${{ secrets.FTP_SITEBETA_USER }}"
+          # Adicione o secret da senha
+          remote-password: "${{ secrets.FTP_SITEBETA_PASS }}"
+          # Altere o nome do diretório do projeto
+          remote-path: "/home/sitebeta/public_html/apicontrol"
+          sync: "delta"
+
+      # Configuração SSH
+      - name: "Configurar SSH"
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa "${{ secrets.FTP_SITEBETA_HOST }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Executar Composer Install na máquina remota
+      - name: "Executar Composer Install na máquina remota"
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "sitebeta@${{ secrets.FTP_SITEBETA_HOST }}" "cd /home/sitebeta/public_html/apicontrol && /opt/cpanel/ea-php81/root/bin/php /opt/cpanel/composer/bin/composer install"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Gerar Key do Laravel Artisan
+      - name: "Gerar Key do Laravel Artisan"
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "sitebeta@${{ secrets.FTP_SITEBETA_HOST }}" "cd /home/sitebeta/public_html/apicontrol && /opt/cpanel/ea-php81/root/bin/php artisan key:generate"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Limpar o cache do Laravel Artisan
+      - name: "Limpar Cache do Laravel Artisan"
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "sitebeta@${{ secrets.FTP_SITEBETA_HOST }}" "cd /home/sitebeta/public_html/apicontrol && /opt/cpanel/ea-php81/root/bin/php artisan cache:clear"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Limpar as rotas do Laravel Artisan
+      - name: "Limpar Rotas do Laravel Artisan"
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "sitebeta@${{ secrets.FTP_SITEBETA_HOST }}" "cd /home/sitebeta/public_html/apicontrol && /opt/cpanel/ea-php81/root/bin/php artisan route:clear"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Limpar as visualizações do Laravel Artisan
+      - name: "Limpar Visualizações do Laravel Artisan"
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "sitebeta@${{ secrets.FTP_SITEBETA_HOST }}" "cd /home/sitebeta/public_html/apicontrol && /opt/cpanel/ea-php81/root/bin/php artisan view:clear"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Executar Artisan Migrate na máquina remota
+      - name: "Executar Artisan Migrate na máquina remota"
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "sitebeta@${{ secrets.FTP_SITEBETA_HOST }}" "cd /home/sitebeta/public_html/apicontrol && echo 'yes' | /opt/cpanel/ea-php81/root/bin/php artisan migrate --seed"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
