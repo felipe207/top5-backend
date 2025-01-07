@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Api\ApiMessage;
+use App\Http\Resources\MusicasResource;
 use App\Models\Musica;
 use Illuminate\Http\Request;
 
@@ -33,7 +34,10 @@ class MusicasController extends Controller {
     {
         try {
             $musicas = Musica::where( 'status', 'ativo' )->get();
-            $response = new ApiMessage( false, 'Músicas encontradas!', $musicas );
+            $result = [];
+
+            $result = MusicasResource::collection( $musicas );
+            $response = new ApiMessage( false, 'Músicas encontradas!', $result );
             return response()->json( $response->getResponse() );
 
         } catch ( \Throwable $th ) {
