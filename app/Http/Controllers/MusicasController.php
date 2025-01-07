@@ -15,9 +15,12 @@ class MusicasController extends Controller {
             if ( !isset( $input['status'] ) ) $input['status'] = 'ativo';
             if ( !isset( $input['visualizacoes'] ) ) $input['visualizacoes'] = 0;
             if ( !isset( $input['ano'] ) ) $input['ano'] = date( 'Y' );
-            if ( !isset( $input['estilo'] ) ) $input['estilo'] = 'Sertanejo';
-            if ( !isset( $input['autor'] ) ) $input['autor'] = 'Tião Carreiro & Pardinho';
-            if ( !isset( $input['nome'] ) ) $input['nome'] = 'Boi Soberano';
+            if ( !isset( $input['autor'] ) ) $input['autor'] = 'Autor Desconhecido';
+
+            $dadosVideo = $this->getYouTubeVideoInfo( $input['link'] );
+            $input['nome'] = $dadosVideo['title'] ?? 'Música sem título';
+            $input['description'] = $dadosVideo['description'] ?? 'Música sem descrição';
+            $input['thumbnail'] = $dadosVideo['thumbnail'] ?? 'https://via.placeholder.com/150';
 
             $musica = Musica::create( $input );
 
@@ -45,4 +48,53 @@ class MusicasController extends Controller {
             return response()->json( $response->getResponse() );
         }
     }
+
+    public function getYouTubeVideoInfo($url) {
+
+        try {
+        if (strpos($url, '?v=') !== false) {
+            $videoId = explode('?v=', $url)[1];
+        } else {
+
+        $videoId = explode('/', $url)[3];
+        }
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        if (preg_match('/<meta name="title" content="(.*?)">/', $response, $matches)) {
+            $title = $matches[1];
+        } else {
+            $title = "Título não encontrado.";
+        }
+
+        if (preg_match('/<meta name="description" content="(.*?)">/', $response, $matches)) {
+            $description = $matches[1];
+        } else {
+            $description = "Descrição não encontrada.";
+        }
+
+        $thumbnail = "https://img.youtube.com/vi/$videoId/hqdefault.jpg";
+
+        return [
+            'title' => $title,
+            'description' => $description,
+            'thumbnail' => $thumbnail,
+        ];
+
+
+        } catch (\Throwable $th) {
+            dd($th);
+            return null;
+        }
+    }
+
+    // // Testa a função
+    // $videoId = "bx1Bh8ZvH84"; // Substitua pelo ID do vídeo
+    // $info = getYouTubeVideoInfo($videoId);
+    // print_r($info);
 }

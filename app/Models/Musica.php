@@ -12,7 +12,8 @@ class Musica extends Model
     use SoftDeletes;
     protected $fillable = [
         'nome', 'autor', 'ano', 'estilo',
-        'visualizacoes', 'link', 'status'
+        'visualizacoes', 'link', 'status',
+        'description', 'thumbnail'
     ];
 
 }
