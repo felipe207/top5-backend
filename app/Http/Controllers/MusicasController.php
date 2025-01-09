@@ -6,6 +6,7 @@ use App\Api\ApiMessage;
 use App\Http\Resources\MusicasResource;
 use App\Models\Musica;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MusicasController extends Controller {
 
@@ -88,13 +89,59 @@ class MusicasController extends Controller {
 
 
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
+            Log::error('Erro ao buscar informações do vídeo do YouTube: ' . $th->getMessage());
             return null;
         }
     }
 
-    // // Testa a função
-    // $videoId = "bx1Bh8ZvH84"; // Substitua pelo ID do vídeo
-    // $info = getYouTubeVideoInfo($videoId);
-    // print_r($info);
+    public function atualiza( Request $request, $id ) {
+        try {
+            $input = $request->all();
+            $musica = Musica::find( $id );
+            $musica->update( $input );
+
+            $response = new ApiMessage( false, 'Música atualizada com sucesso!', $musica );
+            return response()->json( $response->getResponse() );
+
+        } catch ( \Throwable $th ) {
+            $response = new ApiMessage( true, 'Erro ao atualizar música!', $th->getMessage() );
+            return response()->json( $response->getResponse() );
+        }
+    }
+
+    public function deleta( $id ) {
+        try {
+            $musica = Musica::find( $id );
+            $musica->update( [ 'status' => 'inativo' ] );
+
+            $response = new ApiMessage( false, 'Música deletada com sucesso!', $musica );
+            return response()->json( $response->getResponse() );
+
+        } catch ( \Throwable $th ) {
+            $response = new ApiMessage( true, 'Erro ao deletar música!', $th->getMessage() );
+            return response()->json( $response->getResponse() );
+        }
+    }
+
+    public function ordena( Request $request ) {
+        try {
+            $input = $request->all();
+            $musicas = Musica::where( 'status', 'ativo' )->get();
+
+            foreach ( $musicas as $musica ) {
+                $ordem = array_search( $musica->id, $input['musicas'] );
+                $musica->update( [ 'ordem' => $ordem ] );
+            }
+
+            $response = new ApiMessage( false, 'Músicas ordenadas com sucesso!', $musicas );
+            return response()->json( $response->getResponse() );
+
+        } catch ( \Throwable $th ) {
+            $response = new ApiMessage( true, 'Erro ao ordenar músicas!', $th->getMessage() );
+            return response()->json( $response->getResponse() );
+        }
+    }
+
+
 }

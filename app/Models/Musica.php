@@ -13,7 +13,7 @@ class Musica extends Model
     protected $fillable = [
         'nome', 'autor', 'ano', 'estilo',
         'visualizacoes', 'link', 'status',
-        'description', 'thumbnail'
+        'description', 'thumbnail', 'ordem'
     ];
 
 }

@@ -26,7 +26,14 @@ class MusicasResource extends JsonResource
             'titulo' => $this->nome ?? null,
             'visualizacoes' => $this->visualizacoes ?? null,
             'youtube_id' => $youtubeId,
-            'thumb' => $thumb
+            'thumb' => $thumb,
+            'autor' => $this->autor ?? null,
+            'ano' => $this->ano ?? null,
+            'status' => $this->status ?? null,
+            'link' => $this->link ?? null,
+            'descricao' => $this->description ?? null,
+            'thumbnail' => $this->thumbnail ?? null,
+            'created_at' => $this->created_at,
         ];
     }
 }
