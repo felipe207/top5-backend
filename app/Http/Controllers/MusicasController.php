@@ -49,10 +49,32 @@ class MusicasController extends Controller {
                 return response()->json( $response->getResponse() );
 
             }
-            $musicas = Musica::where( 'status', 'ativo' )->orderBy('ordem')->get();
-            $result = [];
-            $result = MusicasResource::collection( $musicas );
-            $response = new ApiMessage( false, 'Músicas encontradas!', $result );
+            // $musicas = Musica::where( 'status', 'ativo' )->orderBy('ordem')->get();
+            // $result = [];
+            // $result = MusicasResource::collection( $musicas );
+            // $response = new ApiMessage( false, 'Músicas encontradas!', $result );
+            $perPage = $request->input('per_page', 10);
+
+            // Busca músicas ativas com paginação
+            $musicas = Musica::where('status', 'ativo')
+                ->orderBy('ordem')
+                ->paginate($perPage);
+
+            // Adapta as músicas com o recurso personalizado
+            $result = MusicasResource::collection($musicas->items());
+
+            // Adiciona os metadados da paginação
+            $responseData = [
+                'data' => $result,
+                'pagination' => [
+                    'current_page' => $musicas->currentPage(),
+                    'last_page' => $musicas->lastPage(),
+                    'per_page' => $musicas->perPage(),
+                    'total' => $musicas->total(),
+                ],
+            ];
+
+            $response = new ApiMessage(false, 'Músicas encontradas!', $responseData);
 
             return response()->json( $response->getResponse() );
 
