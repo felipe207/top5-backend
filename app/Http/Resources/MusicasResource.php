@@ -32,6 +32,7 @@ class MusicasResource extends JsonResource
             'status' => $this->status ?? null,
             'link' => $this->link ?? null,
             'descricao' => $this->description ?? null,
+            'ordem' => $this->ordem ?? null,
             'thumbnail' => $this->thumbnail ?? null,
             'created_at' => $this->created_at,
         ];

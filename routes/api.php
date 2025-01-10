@@ -13,10 +13,10 @@ Route::get('/user', [AuthController::class, 'user'])->middleware('auth:sanctum')
 
 
 Route::post('/salva-musica', [MusicasController::class, 'salva'])->name('salva.musicas');
-Route::get('/musicas', [MusicasController::class, 'musicas'])->name('api.musicas');
+Route::get('/musicas/{id?}', [MusicasController::class, 'musicas'])->name('api.musicas');
 
 // editar música
-Route::post('/update-musica/{id}', [MusicasController::class, 'atualiza'])->name('atualiza.musicas');
+Route::put('/update-musica/{id}', [MusicasController::class, 'atualiza'])->name('atualiza.musicas');
 // deletar música
 Route::delete('/delete-musica/{id}', [MusicasController::class, 'deleta'])->name('deleta.musicas');
 // ordenar musicas

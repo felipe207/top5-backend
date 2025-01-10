@@ -34,14 +34,26 @@ class MusicasController extends Controller {
         }
     }
 
-    public function musicas( Request $request )
+    public function musicas( Request $request , $id = null)
     {
         try {
-            $musicas = Musica::where( 'status', 'ativo' )->get();
-            $result = [];
 
+            if (isset($id)){
+                $musica = Musica::find($id);
+                if (!$musica) {
+                    $response = new ApiMessage( true, 'Música não encontrada!', null );
+                    return response()->json( $response->getResponse() );
+                }
+
+                $response = new ApiMessage( false, 'Música encontrada!', $musica );
+                return response()->json( $response->getResponse() );
+
+            }
+            $musicas = Musica::where( 'status', 'ativo' )->orderBy('ordem')->get();
+            $result = [];
             $result = MusicasResource::collection( $musicas );
             $response = new ApiMessage( false, 'Músicas encontradas!', $result );
+
             return response()->json( $response->getResponse() );
 
         } catch ( \Throwable $th ) {
@@ -98,6 +110,8 @@ class MusicasController extends Controller {
     public function atualiza( Request $request, $id ) {
         try {
             $input = $request->all();
+
+            // Log::info(json_encode($input));
             $musica = Musica::find( $id );
             $musica->update( $input );
 
