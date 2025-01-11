@@ -40,8 +40,8 @@ class MusicasController extends Controller {
             if ( isset( $id ) ) {
                 $musica = Musica::find( $id );
                 if ( !$musica ) {
-                    $response = new ApiMessage( true, 'Música não encontrada!', null );
-                    return response()->json( $response->getResponse() );
+                    $response = new ApiMessage( false, 'Música não encontrada!', null );
+                    return response()->json( $response->getResponse(),200 );
                 }
 
                 $response = new ApiMessage( false, 'Música encontrada!', $musica );
@@ -54,10 +54,10 @@ class MusicasController extends Controller {
             ->orderBy( 'ordem' )
             ->paginate( $perPage );
 
-            // if ( $musicas->isEmpty() ) {
-            //     $response = new ApiMessage( true, 'Nenhuma música encontrada!', null );
-            //     return response()->json( $response->getResponse(), 404 );
-            // }
+            if ( $musicas->isEmpty() ) {
+                $response = new ApiMessage( false, 'Nenhuma música encontrada!', null );
+                return response()->json( $response->getResponse(), 404 );
+            }
             $result = MusicasResource::collection( $musicas->items() );
 
             $responseData = [
