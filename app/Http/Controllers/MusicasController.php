@@ -13,15 +13,15 @@ class MusicasController extends Controller {
     public function salva( Request $request ) {
         try {
             $input = $request->all();
-            if ( !isset( $input['status'] ) ) $input['status'] = 'ativo';
-            if ( !isset( $input['visualizacoes'] ) ) $input['visualizacoes'] = 0;
-            if ( !isset( $input['ano'] ) ) $input['ano'] = date( 'Y' );
-            if ( !isset( $input['autor'] ) ) $input['autor'] = 'Autor Desconhecido';
+            if ( !isset( $input[ 'status' ] ) ) $input[ 'status' ] = 'ativo';
+            if ( !isset( $input[ 'visualizacoes' ] ) ) $input[ 'visualizacoes' ] = 0;
+            if ( !isset( $input[ 'ano' ] ) ) $input[ 'ano' ] = date( 'Y' );
+            if ( !isset( $input[ 'autor' ] ) ) $input[ 'autor' ] = 'Autor Desconhecido';
 
-            $dadosVideo = $this->getYouTubeVideoInfo( $input['link'] );
-            $input['nome'] = $dadosVideo['title'] ?? 'Música sem título';
-            $input['description'] = $dadosVideo['description'] ?? 'Música sem descrição';
-            $input['thumbnail'] = $dadosVideo['thumbnail'] ?? 'https://via.placeholder.com/150';
+            $dadosVideo = $this->getYouTubeVideoInfo( $input[ 'link' ] );
+            $input[ 'nome' ] = $dadosVideo[ 'title' ] ?? 'Música sem título';
+            $input[ 'description' ] = $dadosVideo[ 'description' ] ?? 'Música sem descrição';
+            $input[ 'thumbnail' ] = $dadosVideo[ 'thumbnail' ] ?? 'https://via.placeholder.com/150';
 
             $musica = Musica::create( $input );
 
@@ -34,13 +34,12 @@ class MusicasController extends Controller {
         }
     }
 
-    public function musicas( Request $request , $id = null)
-    {
+    public function musicas( Request $request, $id = null ) {
         try {
 
-            if (isset($id)){
-                $musica = Musica::find($id);
-                if (!$musica) {
+            if ( isset( $id ) ) {
+                $musica = Musica::find( $id );
+                if ( !$musica ) {
                     $response = new ApiMessage( true, 'Música não encontrada!', null );
                     return response()->json( $response->getResponse() );
                 }
@@ -49,21 +48,18 @@ class MusicasController extends Controller {
                 return response()->json( $response->getResponse() );
 
             }
-            // $musicas = Musica::where( 'status', 'ativo' )->orderBy('ordem')->get();
-            // $result = [];
-            // $result = MusicasResource::collection( $musicas );
-            // $response = new ApiMessage( false, 'Músicas encontradas!', $result );
-            $perPage = $request->input('per_page', 10);
 
-            // Busca músicas ativas com paginação
-            $musicas = Musica::where('status', 'ativo')
-                ->orderBy('ordem')
-                ->paginate($perPage);
+            $perPage = $request->input( 'per_page', 6 );
+            $musicas = Musica::where( 'status', 'ativo' )
+            ->orderBy( 'ordem' )
+            ->paginate( $perPage );
 
-            // Adapta as músicas com o recurso personalizado
-            $result = MusicasResource::collection($musicas->items());
+            // if ( $musicas->isEmpty() ) {
+            //     $response = new ApiMessage( true, 'Nenhuma música encontrada!', null );
+            //     return response()->json( $response->getResponse(), 404 );
+            // }
+            $result = MusicasResource::collection( $musicas->items() );
 
-            // Adiciona os metadados da paginação
             $responseData = [
                 'data' => $result,
                 'pagination' => [
@@ -74,7 +70,7 @@ class MusicasController extends Controller {
                 ],
             ];
 
-            $response = new ApiMessage(false, 'Músicas encontradas!', $responseData);
+            $response = new ApiMessage( false, 'Músicas encontradas!', $responseData );
 
             return response()->json( $response->getResponse() );
 
@@ -84,47 +80,45 @@ class MusicasController extends Controller {
         }
     }
 
-    public function getYouTubeVideoInfo($url) {
+    public function getYouTubeVideoInfo( $url ) {
 
         try {
-        if (strpos($url, '?v=') !== false) {
-            $videoId = explode('?v=', $url)[1];
-        } else {
+            if ( strpos( $url, '?v=' ) !== false ) {
+                $videoId = explode( '?v=', $url )[ 1 ];
+            } else {
 
-        $videoId = explode('/', $url)[3];
-        }
+                $videoId = explode( '/', $url )[ 3 ];
+            }
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        $response = curl_exec($ch);
-        curl_close($ch);
+            $ch = curl_init();
+            curl_setopt( $ch, CURLOPT_URL, $url );
+            curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+            curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+            $response = curl_exec( $ch );
+            curl_close( $ch );
 
-        if (preg_match('/<meta name="title" content="(.*?)">/', $response, $matches)) {
-            $title = $matches[1];
-        } else {
-            $title = "Título não encontrado.";
-        }
+            if ( preg_match( '/<meta name="title" content="(.*?)">/', $response, $matches ) ) {
+                $title = $matches[ 1 ];
+            } else {
+                $title = 'Título não encontrado.';
+            }
 
-        if (preg_match('/<meta name="description" content="(.*?)">/', $response, $matches)) {
-            $description = $matches[1];
-        } else {
-            $description = "Descrição não encontrada.";
-        }
+            if ( preg_match( '/<meta name="description" content="(.*?)">/', $response, $matches ) ) {
+                $description = $matches[ 1 ];
+            } else {
+                $description = 'Descrição não encontrada.';
+            }
 
-        $thumbnail = "https://img.youtube.com/vi/$videoId/hqdefault.jpg";
+            $thumbnail = "https://img.youtube.com/vi/$videoId/hqdefault.jpg";
 
-        return [
-            'title' => $title,
-            'description' => $description,
-            'thumbnail' => $thumbnail,
-        ];
+            return [
+                'title' => $title,
+                'description' => $description,
+                'thumbnail' => $thumbnail,
+            ];
 
-
-        } catch (\Throwable $th) {
-            // dd($th);
-            Log::error('Erro ao buscar informações do vídeo do YouTube: ' . $th->getMessage());
+        } catch ( \Throwable $th ) {
+            Log::error( 'Erro ao buscar informações do vídeo do YouTube: ' . $th->getMessage() );
             return null;
         }
     }
@@ -132,11 +126,8 @@ class MusicasController extends Controller {
     public function atualiza( Request $request, $id ) {
         try {
             $input = $request->all();
-
-            // Log::info(json_encode($input));
             $musica = Musica::find( $id );
             $musica->update( $input );
-
             $response = new ApiMessage( false, 'Música atualizada com sucesso!', $musica );
             return response()->json( $response->getResponse() );
 
@@ -150,34 +141,37 @@ class MusicasController extends Controller {
         try {
             $musica = Musica::find( $id );
             $musica->update( [ 'status' => 'inativo' ] );
-
             $response = new ApiMessage( false, 'Música deletada com sucesso!', $musica );
-            return response()->json( $response->getResponse() );
 
+            return response()->json( $response->getResponse() );
         } catch ( \Throwable $th ) {
             $response = new ApiMessage( true, 'Erro ao deletar música!', $th->getMessage() );
             return response()->json( $response->getResponse() );
         }
     }
 
-    public function ordena( Request $request ) {
+    public function reordenarMusicas( Request $request ) {
         try {
-            $input = $request->all();
-            $musicas = Musica::where( 'status', 'ativo' )->get();
+            $musicas = $request->input('musicas');
 
-            foreach ( $musicas as $musica ) {
-                $ordem = array_search( $musica->id, $input['musicas'] );
-                $musica->update( [ 'ordem' => $ordem ] );
+            if (empty($musicas) || !is_array($musicas)) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Array de músicas inválido.',
+                ], 400);
             }
 
-            $response = new ApiMessage( false, 'Músicas ordenadas com sucesso!', $musicas );
+            foreach ($musicas as $index => $id) {
+                Musica::where('id', $id)->update(['ordem' => $index + 1]);
+            }
+
+            $response = new ApiMessage( false, 'Músicas reordenadas com sucesso!', null );
             return response()->json( $response->getResponse() );
 
         } catch ( \Throwable $th ) {
-            $response = new ApiMessage( true, 'Erro ao ordenar músicas!', $th->getMessage() );
-            return response()->json( $response->getResponse() );
+            $response = new ApiMessage( true, 'Erro ao ordenar música!s', $th->getMessage() );
+            return response()->json( $response->getResponse(), 500 );
         }
     }
-
 
 }

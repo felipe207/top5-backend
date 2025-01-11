@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
         ]);
         // adiciona usuário de role web
         DB::table('users')->insert([
-            'name' => 'Web',
+            'name' => 'Usuário',
             'email' => 'webuser@gmail.com',
             'password' => Hash::make('12345678'),
             'role' => 'web',

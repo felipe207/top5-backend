@@ -20,6 +20,9 @@ return new class extends Migration
             $table->integer('visualizacoes')->nullable();
             $table->string('link');
             $table->enum('status', ['ativo', 'inativo'])->default('ativo');
+            $table->text('description')->nullable();
+            $table->string('thumbnail')->nullable();
+            $table->integer('ordem')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
