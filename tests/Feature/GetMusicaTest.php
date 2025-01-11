@@ -12,7 +12,6 @@ class GetMusicaTest extends TestCase {
 
         Musica::factory()->create();
         $controller = new MusicasController();
-
         $request = Request::create( '/musicas/1', 'GET' );
         $response = $controller->musicas( $request );
         $responseData = $response->getData();
