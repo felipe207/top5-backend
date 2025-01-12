@@ -16,9 +16,8 @@ class MusicasResource extends JsonResource
     {
 
         $youtubeId = explode( '/', $this->link );
-        $youtubeId = explode( '=', $youtubeId[ count( $youtubeId ) - 1 ] );
-        $youtubeId = $youtubeId[0];
-
+        $youtubeId = explode( '=', $youtubeId[ count( $youtubeId ) - 1] );
+        $youtubeId = end( $youtubeId );
         $thumb = 'https://img.youtube.com/vi/'.$youtubeId.'/hqdefault.jpg';
 
         return [

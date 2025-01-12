@@ -25,6 +25,8 @@ class MusicasController extends Controller {
 
             $musica = Musica::create( $input );
 
+            $musica = new MusicasResource( $musica );
+
             $response = new ApiMessage( false, 'Música salva com sucesso!', $musica );
             return response()->json( $response->getResponse() );
 
